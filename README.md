@@ -84,7 +84,7 @@ You can manually open your browser and navigate to `http://localhost:3000` after
 - **Secure:** Local-only processing.
 
 ## Support
-Feel free to create an issue if you encounter problems or have ideas for improvement. However, please keep in mind that the creator considers this application "good enough" for its current use case, so please do not expect fast support or immediate fixes.
+Feel free to create an issue if you encounter problems or have ideas for improvement. However, please keep in mind that the author considers this application "good enough" for its current use case, so please do not expect fast support or immediate fixes.
 
 ## License
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) - see the [LICENSE](LICENSE) file for details.
