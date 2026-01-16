@@ -2,7 +2,7 @@
 
 A modern, standalone offline viewer for your Reddit GDPR data export files.
 
-![Plugin Screenshot](https://github.com/guilamu/reddit-gdpr-export-viewer/blob/main/screenshot.png)
+![Plugin Screenshot](https://github.com/guilamu/reddit-gdpr-export-viewer/blob/main/screenshot.jpg)
 
 ## Data Visualization
 - **View Your History:** Browse Posts, Comments, Messages, Saved Items, and Votes in a clean interface.
