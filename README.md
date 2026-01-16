@@ -65,7 +65,7 @@ You can manually open your browser and navigate to `http://localhost:3000` after
 ## Project Structure
 ```
 .
-├── RedditViewer.exe          # Main application executable
+├── RedditViewer.exe          # Main application executable (optional)
 ├── server.js                 # Server source code (Node.js)
 ├── index.html                # Main user interface
 ├── styles.css                # Visual styling
