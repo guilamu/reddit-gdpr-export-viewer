@@ -1,0 +1,15 @@
+{
+    "files": {
+        "posts": "posts.csv",
+        "comments": "comments.csv",
+        "messages": "messages_archive.csv",
+        "postVotes": "post_votes.csv",
+        "commentVotes": "comment_votes.csv",
+        "savedPosts": "saved_posts.csv",
+        "savedComments": "saved_comments.csv",
+        "hiddenPosts": "hidden_posts.csv",
+        "statistics": "statistics.csv",
+        "subscriptions": "subscribed_subreddits.csv",
+        "preferences": "user_preferences.csv"
+    }
+}

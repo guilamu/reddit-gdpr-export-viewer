@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit GDPR Export Data Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>📊 Reddit GDPR Export Data Viewer</h1>
+        <p class="subtitle">Your GDPR export data, beautifully displayed</p>
+
+    </header>
+
+    <!-- File picker hidden by default -->
+    <div id="file-picker" class="file-picker hidden">
+        <div class="drop-zone" id="drop-zone">
+            <div class="drop-icon">📁</div>
+            <h2>Drop your CSV files here</h2>
+            <p>or click to select <strong>posts.csv</strong> and <strong>comments.csv</strong></p>
+            <input type="file" id="file-input" multiple accept=".csv" hidden>
+            <button class="select-btn" id="select-btn">Select Files</button>
+            <div class="file-status" id="file-status"></div>
+        </div>
+    </div>
+
+    <!-- Main app shown by default -->
+    <div id="main-app">
+        <nav class="tabs">
+            <button class="tab active" data-tab="posts">📝 Posts</button>
+            <button class="tab" data-tab="comments">💬 Comments</button>
+            <button class="tab" data-tab="messages">✉️ Messages</button>
+            <button class="tab" data-tab="votes">👍 Votes</button>
+            <button class="tab" data-tab="saved">💾 Saved</button>
+            <button class="tab" data-tab="account">👤 Account</button>
+            <button class="tab" data-tab="settings">⚙️ Settings</button>
+        </nav>
+
+        <main>
+            <div class="controls">
+                <input type="text" id="search" placeholder="🔍 Search by subreddit, title, or content...">
+                <select id="post-type-filter" class="filter-select">
+                    <option value="all">All Posts</option>
+                    <option value="text">📝 Text Posts</option>
+                    <option value="link">🔗 Link/Media Posts</option>
+                </select>
+                <select id="subreddit-filter" class="filter-select" style="display: none;">
+                    <option value="all">All Subreddits</option>
+                </select>
+                <div class="stats" id="stats"></div>
+            </div>
+
+            <!-- Date Range Slider -->
+            <div class="date-range-container" id="date-range-container" style="display: none;">
+                <div class="date-range-labels">
+                    <span id="date-range-start">--</span>
+                    <span class="date-range-title">📅 Date Range</span>
+                    <span id="date-range-end">--</span>
+                </div>
+                <div class="date-range-slider">
+                    <input type="range" id="date-min-slider" min="0" max="100" value="0" class="range-slider range-min">
+                    <input type="range" id="date-max-slider" min="0" max="100" value="100"
+                        class="range-slider range-max">
+                    <div class="slider-track"></div>
+                    <div class="slider-range" id="slider-range"></div>
+                </div>
+            </div>
+
+            <!-- Posts Tab -->
+            <div id="posts-tab" class="tab-content active">
+                <div id="posts-uploader" class="tab-uploader">
+                    <div class="mini-drop-zone" id="posts-drop-zone">
+                        <h3>Load Posts Data</h3>
+                        <p>Drop <strong>posts.csv</strong> here or click to select</p>
+                        <button class="select-btn" id="posts-select-btn">Select Posts File</button>
+                        <input type="file" id="posts-file-input" accept=".csv" hidden>
+                    </div>
+                </div>
+                <div id="posts-view" class="hidden">
+                    <div class="table-container">
+                        <table id="posts-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="date">Date ↕</th>
+                                    <th data-sort="subreddit">Subreddit ↕</th>
+                                    <th data-sort="title">Title ↕</th>
+                                    <th class="actions-col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="posts-pagination"></div>
+                </div>
+            </div>
+
+            <!-- Comments Tab -->
+            <div id="comments-tab" class="tab-content">
+                <div id="comments-uploader" class="tab-uploader">
+                    <div class="mini-drop-zone" id="comments-drop-zone">
+                        <h3>Load Comments Data</h3>
+                        <p>Drop <strong>comments.csv</strong> here or click to select</p>
+                        <button class="select-btn" id="comments-select-btn">Select Comments File</button>
+                        <input type="file" id="comments-file-input" accept=".csv" hidden>
+                    </div>
+                </div>
+                <div id="comments-view" class="hidden">
+                    <div class="table-container">
+                        <table id="comments-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="date">Date ↕</th>
+                                    <th data-sort="subreddit">Subreddit ↕</th>
+                                    <th data-sort="body">Content ↕</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="comments-pagination"></div>
+                </div>
+            </div>
+
+            <!-- Messages Tab -->
+            <div id="messages-tab" class="tab-content">
+                <div id="messages-uploader" class="tab-uploader">
+                    <div class="mini-drop-zone" id="messages-drop-zone">
+                        <h3>Load Messages Data</h3>
+                        <p>Drop <strong>messages_archive.csv</strong> here or click to select</p>
+                        <button class="select-btn" id="messages-select-btn">Select Messages File</button>
+                        <input type="file" id="messages-file-input" accept=".csv" hidden>
+                    </div>
+                </div>
+                <div id="messages-view" class="hidden">
+                    <div class="table-container">
+                        <table id="messages-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="date">Date ↕</th>
+                                    <th data-sort="from">From ↕</th>
+                                    <th data-sort="to">To ↕</th>
+                                    <th data-sort="subject">Subject ↕</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="messages-pagination"></div>
+                </div>
+            </div>
+
+            <!-- Votes Tab -->
+            <div id="votes-tab" class="tab-content">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" data-subtab="post-votes">Post Votes</button>
+                    <button class="sub-tab" data-subtab="comment-votes">Comment Votes</button>
+                </div>
+
+                <!-- Post Votes -->
+                <div id="post-votes-subtab" class="subtab-content active">
+                    <div id="post-votes-uploader" class="tab-uploader">
+                        <div class="mini-drop-zone" id="post-votes-drop-zone">
+                            <h3>Load Post Votes</h3>
+                            <p>Drop <strong>post_votes.csv</strong> here or click to select</p>
+                            <button class="select-btn" id="post-votes-select-btn">Select File</button>
+                            <input type="file" id="post-votes-file-input" accept=".csv" hidden>
+                        </div>
+                    </div>
+                    <div id="post-votes-view" class="hidden">
+                        <div class="table-container">
+                            <table id="post-votes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Vote ↕</th>
+                                        <th>Post Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="post-votes-pagination"></div>
+                    </div>
+                </div>
+
+                <!-- Comment Votes -->
+                <div id="comment-votes-subtab" class="subtab-content">
+                    <div id="comment-votes-uploader" class="tab-uploader">
+                        <div class="mini-drop-zone" id="comment-votes-drop-zone">
+                            <h3>Load Comment Votes</h3>
+                            <p>Drop <strong>comment_votes.csv</strong> here or click to select</p>
+                            <button class="select-btn" id="comment-votes-select-btn">Select File</button>
+                            <input type="file" id="comment-votes-file-input" accept=".csv" hidden>
+                        </div>
+                    </div>
+                    <div id="comment-votes-view" class="hidden">
+                        <div class="table-container">
+                            <table id="comment-votes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Vote ↕</th>
+                                        <th>Comment Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="comment-votes-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Tab -->
+            <div id="saved-tab" class="tab-content">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" data-subtab="saved-posts">Saved Posts</button>
+                    <button class="sub-tab" data-subtab="saved-comments">Saved Comments</button>
+                    <button class="sub-tab" data-subtab="hidden-posts">Hidden Posts</button>
+                </div>
+
+                <!-- Saved Posts -->
+                <div id="saved-posts-subtab" class="subtab-content active">
+                    <div id="saved-posts-uploader" class="tab-uploader">
+                        <div class="mini-drop-zone" id="saved-posts-drop-zone">
+                            <h3>Load Saved Posts</h3>
+                            <p>Drop <strong>saved_posts.csv</strong> here or click to select</p>
+                            <button class="select-btn" id="saved-posts-select-btn">Select File</button>
+                            <input type="file" id="saved-posts-file-input" accept=".csv" hidden>
+                        </div>
+                    </div>
+                    <div id="saved-posts-view" class="hidden">
+                        <div class="table-container">
+                            <table id="saved-posts-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saved Comments -->
+                <div id="saved-comments-subtab" class="subtab-content">
+                    <div id="saved-comments-uploader" class="tab-uploader">
+                        <div class="mini-drop-zone" id="saved-comments-drop-zone">
+                            <h3>Load Saved Comments</h3>
+                            <p>Drop <strong>saved_comments.csv</strong> here or click to select</p>
+                            <button class="select-btn" id="saved-comments-select-btn">Select File</button>
+                            <input type="file" id="saved-comments-file-input" accept=".csv" hidden>
+                        </div>
+                    </div>
+                    <div id="saved-comments-view" class="hidden">
+                        <div class="table-container">
+                            <table id="saved-comments-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden Posts -->
+                <div id="hidden-posts-subtab" class="subtab-content">
+                    <div id="hidden-posts-uploader" class="tab-uploader">
+                        <div class="mini-drop-zone" id="hidden-posts-drop-zone">
+                            <h3>Load Hidden Posts</h3>
+                            <p>Drop <strong>hidden_posts.csv</strong> here or click to select</p>
+                            <button class="select-btn" id="hidden-posts-select-btn">Select File</button>
+                            <input type="file" id="hidden-posts-file-input" accept=".csv" hidden>
+                        </div>
+                    </div>
+                    <div id="hidden-posts-view" class="hidden">
+                        <div class="table-container">
+                            <table id="hidden-posts-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Tab -->
+            <div id="account-tab" class="tab-content">
+                <div class="account-grid">
+                    <!-- Statistics Card -->
+                    <div class="account-card">
+                        <h3>📊 Account Statistics</h3>
+                        <div id="statistics-content" class="card-content">
+                            <div class="mini-drop-zone" id="statistics-drop-zone">
+                                <p>Drop <strong>statistics.csv</strong> here</p>
+                                <button class="select-btn" id="statistics-select-btn">Select File</button>
+                                <input type="file" id="statistics-file-input" accept=".csv" hidden>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subscribed Subreddits Card -->
+                    <div class="account-card">
+                        <h3>📋 Subscribed Subreddits</h3>
+                        <div id="subscriptions-content" class="card-content">
+                            <div class="mini-drop-zone" id="subscriptions-drop-zone">
+                                <p>Drop <strong>subscribed_subreddits.csv</strong> here</p>
+                                <button class="select-btn" id="subscriptions-select-btn">Select File</button>
+                                <input type="file" id="subscriptions-file-input" accept=".csv" hidden>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Preferences Card -->
+                    <div class="account-card wide">
+                        <h3>⚙️ User Preferences</h3>
+                        <div id="preferences-content" class="card-content">
+                            <div class="mini-drop-zone" id="preferences-drop-zone">
+                                <p>Drop <strong>user_preferences.csv</strong> here</p>
+                                <button class="select-btn" id="preferences-select-btn">Select File</button>
+                                <input type="file" id="preferences-file-input" accept=".csv" hidden>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="settings-grid">
+                    <!-- Server Status -->
+                    <div class="settings-card">
+                        <h3>🖥️ Server Status</h3>
+                        <div class="settings-item">
+                            <label>Status:</label>
+                            <span id="server-status-indicator" class="server-status offline">● Offline</span>
+                        </div>
+                        <p class="settings-help">Run <code>node server.js</code> to enable file saving and AI features.
+                        </p>
+                    </div>
+
+                    <!-- Poe API Configuration -->
+                    <div class="settings-card" style="display: none;">
+                        <h3>🤖 Poe API Configuration</h3>
+                        <div class="settings-item">
+                            <label for="poe-api-key">API Key:</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="poe-api-key" placeholder="Paste your Poe API key..."
+                                    class="settings-input">
+                                <span id="api-key-status" class="api-status"></span>
+                            </div>
+                        </div>
+                        <div class="settings-item">
+                            <label for="poe-model">Model:</label>
+                            <select id="poe-model" class="filter-select" disabled>
+                                <option value="">-- Enter API key first --</option>
+                            </select>
+                        </div>
+                        <p class="settings-help">Get your free API key <a href="https://poe.com/api_key"
+                                target="_blank">here</a></p>
+                    </div>
+
+                    <!-- App Configuration -->
+                    <div class="settings-card">
+                        <h3>📁 Configuration</h3>
+                        <div class="settings-item">
+                            <label>Config File:</label>
+                            <button id="load-config-btn" class="settings-btn">Load Config</button>
+                            <input type="file" id="config-file-input" accept=".json" hidden>
+                        </div>
+                        <div class="settings-item">
+                            <label></label>
+                            <span id="config-status" class="config-status"></span>
+                        </div>
+                        <p class="settings-help">Load your saved <code>reddit_data_config.json</code> file.</p>
+                    </div>
+
+                    <!-- AI Features -->
+                    <div class="settings-card wide" style="display: none;">
+                        <h3>✨ AI Features</h3>
+                        <div class="ai-features">
+                            <button id="ai-summarize" class="ai-btn" disabled>
+                                📝 Summarize Posts
+                                <span>Get AI summary of your posting activity</span>
+                            </button>
+                            <button id="ai-insights" class="ai-btn" disabled>
+                                📊 Generate Insights
+                                <span>Analyze patterns in your Reddit data</span>
+                            </button>
+                            <button id="ai-chat" class="ai-btn" disabled>
+                                💬 Chat About Data
+                                <span>Ask questions about your Reddit history</span>
+                            </button>
+                        </div>
+                        <div id="ai-output" class="ai-output hidden"></div>
+                    </div>
+
+                    <!-- About -->
+                    <div class="settings-card">
+                        <h3>ℹ️ About</h3>
+                        <p>Reddit GDPR Export Data Viewer v1.0</p>
+                        <p class="settings-help">View and manage your Reddit GDPR export data.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for full content -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title"></h2>
+            <div class="modal-meta" id="modal-meta"></div>
+            <div class="modal-body" id="modal-body"></div>
+            <a id="modal-link" href="#" target="_blank" class="reddit-link">View on Reddit →</a>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
