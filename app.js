@@ -46,11 +46,21 @@
         postTypeFilter: 'all', // 'all', 'text', 'link'
         subredditFilter: 'all', // 'all' or specific subreddit name
 
-        // Date range
-        dateRange: {
-            allDates: [],    // All unique dates from posts, sorted
-            minIndex: 0,     // Current min slider position
-            maxIndex: 100    // Current max slider position
+        // Date range - separate for each content type
+        postsDateRange: {
+            allDates: [],
+            minIndex: 0,
+            maxIndex: 100
+        },
+        commentsDateRange: {
+            allDates: [],
+            minIndex: 0,
+            maxIndex: 100
+        },
+        messagesDateRange: {
+            allDates: [],
+            minIndex: 0,
+            maxIndex: 100
         },
 
         // File load status
@@ -107,13 +117,27 @@
         // Filters
         postTypeFilter: document.getElementById('post-type-filter'),
         subredditFilter: document.getElementById('subreddit-filter'),
-        // Date range slider
-        dateRangeContainer: document.getElementById('date-range-container'),
-        dateMinSlider: document.getElementById('date-min-slider'),
-        dateMaxSlider: document.getElementById('date-max-slider'),
-        dateRangeStart: document.getElementById('date-range-start'),
-        dateRangeEnd: document.getElementById('date-range-end'),
-        sliderRange: document.getElementById('slider-range')
+        // Date range sliders - one per tab
+        postsDateRangeContainer: document.getElementById('posts-date-range-container'),
+        postsDateMinSlider: document.getElementById('posts-date-min-slider'),
+        postsDateMaxSlider: document.getElementById('posts-date-max-slider'),
+        postsDateRangeStart: document.getElementById('posts-date-range-start'),
+        postsDateRangeEnd: document.getElementById('posts-date-range-end'),
+        postsSliderRange: document.getElementById('posts-slider-range'),
+
+        commentsDateRangeContainer: document.getElementById('comments-date-range-container'),
+        commentsDateMinSlider: document.getElementById('comments-date-min-slider'),
+        commentsDateMaxSlider: document.getElementById('comments-date-max-slider'),
+        commentsDateRangeStart: document.getElementById('comments-date-range-start'),
+        commentsDateRangeEnd: document.getElementById('comments-date-range-end'),
+        commentsSliderRange: document.getElementById('comments-slider-range'),
+
+        messagesDateRangeContainer: document.getElementById('messages-date-range-container'),
+        messagesDateMinSlider: document.getElementById('messages-date-min-slider'),
+        messagesDateMaxSlider: document.getElementById('messages-date-max-slider'),
+        messagesDateRangeStart: document.getElementById('messages-date-range-start'),
+        messagesDateRangeEnd: document.getElementById('messages-date-range-end'),
+        messagesSliderRange: document.getElementById('messages-slider-range')
     };
 
     // File type mappings
@@ -227,7 +251,7 @@
                 state.filteredPosts = data.filter(p => p.title !== '[deleted by user]');
                 state.filesLoaded.posts = true;
                 sortData('posts', 'date', 'desc');
-                initDateRangeSlider();
+                initDateRangeSlider('posts');
                 populateSubredditFilter();
                 break;
             case 'comments':
@@ -235,12 +259,14 @@
                 state.filteredComments = [...data];
                 state.filesLoaded.comments = true;
                 sortData('comments', 'date', 'desc');
+                initDateRangeSlider('comments');
                 break;
             case 'messages':
                 state.messages = data;
                 state.filteredMessages = [...data];
                 state.filesLoaded.messages = true;
                 sortData('messages', 'date', 'desc');
+                initDateRangeSlider('messages');
                 break;
             case 'post-votes':
                 state.postVotes = data;
@@ -511,10 +537,22 @@
             elements.subredditFilter.addEventListener('change', handleSubredditFilter);
         }
 
-        // Date range sliders
-        if (elements.dateMinSlider && elements.dateMaxSlider) {
-            elements.dateMinSlider.addEventListener('input', handleDateRangeChange);
-            elements.dateMaxSlider.addEventListener('input', handleDateRangeChange);
+        // Posts date range sliders
+        if (elements.postsDateMinSlider && elements.postsDateMaxSlider) {
+            elements.postsDateMinSlider.addEventListener('input', () => handleDateRangeChange('posts'));
+            elements.postsDateMaxSlider.addEventListener('input', () => handleDateRangeChange('posts'));
+        }
+
+        // Comments date range sliders
+        if (elements.commentsDateMinSlider && elements.commentsDateMaxSlider) {
+            elements.commentsDateMinSlider.addEventListener('input', () => handleDateRangeChange('comments'));
+            elements.commentsDateMaxSlider.addEventListener('input', () => handleDateRangeChange('comments'));
+        }
+
+        // Messages date range sliders
+        if (elements.messagesDateMinSlider && elements.messagesDateMaxSlider) {
+            elements.messagesDateMinSlider.addEventListener('input', () => handleDateRangeChange('messages'));
+            elements.messagesDateMaxSlider.addEventListener('input', () => handleDateRangeChange('messages'));
         }
 
         // Modal
@@ -557,106 +595,127 @@
         applyFilters();
     }
 
-    // Initialize date range slider based on loaded data
-    function initDateRangeSlider() {
-        // Collect all timestamps
-        let allDates = [];
+    // Initialize date range slider for a specific content type
+    function initDateRangeSlider(type) {
+        // Get element references based on type
+        const typeCapitalized = type.charAt(0).toUpperCase() + type.slice(1);
+        const containerEl = elements[`${type}DateRangeContainer`];
+        const minSliderEl = elements[`${type}DateMinSlider`];
+        const maxSliderEl = elements[`${type}DateMaxSlider`];
+        const dateRangeState = state[`${type}DateRange`];
 
-        if (state.posts && state.posts.length) {
-            allDates = allDates.concat(state.posts
-                .filter(p => p.date && p.title !== '[deleted by user]')
-                .map(p => new Date(p.date).getTime()));
+        if (!containerEl || !minSliderEl || !maxSliderEl || !dateRangeState) return;
+
+        // Collect timestamps only from this content type
+        let sourceData = [];
+        if (type === 'posts') {
+            sourceData = state.posts.filter(p => p.date && p.title !== '[deleted by user]');
+        } else if (type === 'comments') {
+            sourceData = state.comments.filter(c => c.date);
+        } else if (type === 'messages') {
+            sourceData = state.messages.filter(m => m.date);
         }
 
-        if (state.comments && state.comments.length) {
-            allDates = allDates.concat(state.comments
-                .filter(c => c.date)
-                .map(c => new Date(c.date).getTime()));
-        }
-
-        if (state.messages && state.messages.length) {
-            allDates = allDates.concat(state.messages
-                .filter(m => m.date)
-                .map(m => new Date(m.date).getTime()));
-        }
+        const allDates = sourceData.map(item => new Date(item.date).getTime());
 
         // Filter valid dates and sort
         const dates = allDates
             .filter(d => !isNaN(d))
             .sort((a, b) => a - b);
 
-        if (dates.length < 2) return;
-
-        // Store unique sorted dates
-        state.dateRange.allDates = [...new Set(dates)];
-        state.dateRange.minIndex = 0;
-        state.dateRange.maxIndex = 100;
-
-        // Show the slider
-        if (elements.dateRangeContainer) {
-            elements.dateRangeContainer.style.display = 'block';
+        if (dates.length < 2) {
+            containerEl.style.display = 'none';
+            return;
         }
 
+        // Store unique sorted dates
+        dateRangeState.allDates = [...new Set(dates)];
+        dateRangeState.minIndex = 0;
+        dateRangeState.maxIndex = 100;
+
+        // Show the slider
+        containerEl.style.display = 'block';
+
         // Reset sliders
-        if (elements.dateMinSlider) elements.dateMinSlider.value = 0;
-        if (elements.dateMaxSlider) elements.dateMaxSlider.value = 100;
+        minSliderEl.value = 0;
+        maxSliderEl.value = 100;
 
         // Update labels and visual
-        updateDateRangeLabels();
-        updateSliderVisual();
+        updateDateRangeLabels(type);
+        updateSliderVisual(type);
     }
 
-    // Handle date range slider change
-    function handleDateRangeChange() {
-        let minVal = parseInt(elements.dateMinSlider.value);
-        let maxVal = parseInt(elements.dateMaxSlider.value);
+    // Handle date range slider change for a specific type
+    function handleDateRangeChange(type) {
+        const minSliderEl = elements[`${type}DateMinSlider`];
+        const maxSliderEl = elements[`${type}DateMaxSlider`];
+        const dateRangeState = state[`${type}DateRange`];
+
+        if (!minSliderEl || !maxSliderEl || !dateRangeState) return;
+
+        let minVal = parseInt(minSliderEl.value);
+        let maxVal = parseInt(maxSliderEl.value);
 
         // Prevent crossing
         if (minVal > maxVal - 5) {
-            if (this === elements.dateMinSlider) {
+            if (document.activeElement === minSliderEl) {
                 minVal = maxVal - 5;
-                elements.dateMinSlider.value = minVal;
+                minSliderEl.value = minVal;
             } else {
                 maxVal = minVal + 5;
-                elements.dateMaxSlider.value = maxVal;
+                maxSliderEl.value = maxVal;
             }
         }
 
-        state.dateRange.minIndex = minVal;
-        state.dateRange.maxIndex = maxVal;
+        dateRangeState.minIndex = minVal;
+        dateRangeState.maxIndex = maxVal;
 
-        updateDateRangeLabels();
-        updateSliderVisual();
-        state.postsPage = 1;
+        updateDateRangeLabels(type);
+        updateSliderVisual(type);
+
+        // Reset appropriate page
+        if (type === 'posts') state.postsPage = 1;
+        else if (type === 'comments') state.commentsPage = 1;
+        else if (type === 'messages') state.messagesPage = 1;
+
         applyFilters();
     }
 
-    // Update date labels based on slider positions
-    function updateDateRangeLabels() {
-        const dates = state.dateRange.allDates;
+    // Update date labels for a specific type
+    function updateDateRangeLabels(type) {
+        const dateRangeState = state[`${type}DateRange`];
+        const startEl = elements[`${type}DateRangeStart`];
+        const endEl = elements[`${type}DateRangeEnd`];
+
+        if (!dateRangeState || !startEl || !endEl) return;
+
+        const dates = dateRangeState.allDates;
         if (!dates.length) return;
 
-        const minIdx = Math.floor((state.dateRange.minIndex / 100) * (dates.length - 1));
-        const maxIdx = Math.floor((state.dateRange.maxIndex / 100) * (dates.length - 1));
+        const minIdx = Math.floor((dateRangeState.minIndex / 100) * (dates.length - 1));
+        const maxIdx = Math.floor((dateRangeState.maxIndex / 100) * (dates.length - 1));
 
         const minDate = new Date(dates[minIdx]);
         const maxDate = new Date(dates[maxIdx]);
 
         const formatDate = (d) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 
-        if (elements.dateRangeStart) elements.dateRangeStart.textContent = formatDate(minDate);
-        if (elements.dateRangeEnd) elements.dateRangeEnd.textContent = formatDate(maxDate);
+        startEl.textContent = formatDate(minDate);
+        endEl.textContent = formatDate(maxDate);
     }
 
-    // Update slider track visual
-    function updateSliderVisual() {
-        const minVal = state.dateRange.minIndex;
-        const maxVal = state.dateRange.maxIndex;
+    // Update slider track visual for a specific type
+    function updateSliderVisual(type) {
+        const dateRangeState = state[`${type}DateRange`];
+        const sliderRangeEl = elements[`${type}SliderRange`];
 
-        if (elements.sliderRange) {
-            elements.sliderRange.style.left = minVal + '%';
-            elements.sliderRange.style.width = (maxVal - minVal) + '%';
-        }
+        if (!dateRangeState || !sliderRangeEl) return;
+
+        const minVal = dateRangeState.minIndex;
+        const maxVal = dateRangeState.maxIndex;
+
+        sliderRangeEl.style.left = minVal + '%';
+        sliderRangeEl.style.width = (maxVal - minVal) + '%';
     }
 
     // Setup sub-tab listeners
@@ -694,19 +753,9 @@
         // Manage visibility of global controls and filters
         const hideGlobalControls = ['votes', 'saved', 'account', 'settings'].includes(tabName);
         const controls = document.querySelector('.controls');
-        const dateRangeContainer = document.getElementById('date-range-container');
 
         if (controls) {
             controls.style.display = hideGlobalControls ? 'none' : 'flex';
-        }
-
-        if (dateRangeContainer) {
-            if (hideGlobalControls) {
-                dateRangeContainer.style.display = 'none';
-            } else {
-                // Restore visibility if we have enough date data
-                dateRangeContainer.style.display = (state.dateRange && state.dateRange.allDates.length >= 2) ? 'block' : 'none';
-            }
         }
     }
 
@@ -755,16 +804,14 @@
             filteredPosts = filteredPosts.filter(post => post.subreddit === state.subredditFilter);
         }
 
-        // Apply date range filter
-        let dateRangeActive = state.dateRange.allDates.length >= 2;
-        let minDate, maxDate;
-
-        if (dateRangeActive) {
-            const dates = state.dateRange.allDates;
-            const minIdx = Math.floor((state.dateRange.minIndex / 100) * (dates.length - 1));
-            const maxIdx = Math.floor((state.dateRange.maxIndex / 100) * (dates.length - 1));
-            minDate = dates[minIdx];
-            maxDate = dates[maxIdx];
+        // Apply posts date range filter (using posts-specific slider)
+        const postsDateRangeActive = state.postsDateRange.allDates.length >= 2;
+        if (postsDateRangeActive) {
+            const dates = state.postsDateRange.allDates;
+            const minIdx = Math.floor((state.postsDateRange.minIndex / 100) * (dates.length - 1));
+            const maxIdx = Math.floor((state.postsDateRange.maxIndex / 100) * (dates.length - 1));
+            const minDate = dates[minIdx];
+            const maxDate = dates[maxIdx];
 
             filteredPosts = filteredPosts.filter(post => {
                 const postDate = new Date(post.date).getTime();
@@ -803,12 +850,30 @@
             state.filteredCommentVotes = [...state.commentVotes];
         }
 
-        // Apply date range filter to Comments and Messages
-        if (dateRangeActive) {
+        // Apply comments date range filter (using comments-specific slider)
+        const commentsDateRangeActive = state.commentsDateRange.allDates.length >= 2;
+        if (commentsDateRangeActive) {
+            const dates = state.commentsDateRange.allDates;
+            const minIdx = Math.floor((state.commentsDateRange.minIndex / 100) * (dates.length - 1));
+            const maxIdx = Math.floor((state.commentsDateRange.maxIndex / 100) * (dates.length - 1));
+            const minDate = dates[minIdx];
+            const maxDate = dates[maxIdx];
+
             state.filteredComments = state.filteredComments.filter(item => {
                 const itemDate = new Date(item.date).getTime();
                 return !isNaN(itemDate) && itemDate >= minDate && itemDate <= maxDate;
             });
+        }
+
+        // Apply messages date range filter (using messages-specific slider)
+        const messagesDateRangeActive = state.messagesDateRange.allDates.length >= 2;
+        if (messagesDateRangeActive) {
+            const dates = state.messagesDateRange.allDates;
+            const minIdx = Math.floor((state.messagesDateRange.minIndex / 100) * (dates.length - 1));
+            const maxIdx = Math.floor((state.messagesDateRange.maxIndex / 100) * (dates.length - 1));
+            const minDate = dates[minIdx];
+            const maxDate = dates[maxIdx];
+
             state.filteredMessages = state.filteredMessages.filter(item => {
                 const itemDate = new Date(item.date).getTime();
                 return !isNaN(itemDate) && itemDate >= minDate && itemDate <= maxDate;

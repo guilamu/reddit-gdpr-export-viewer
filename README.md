@@ -75,6 +75,10 @@ You can manually open your browser and navigate to `http://localhost:3000` after
 
 ## Changelog
 
+### 1.1.0
+- **Fixed:** Date range slider now works independently per tab (Posts, Comments, Messages) - thanks to Reddit user [steap](https://www.reddit.com/user/steap) for the bug report!
+- **Improved:** Each tab's slider only uses dates from its own content type
+
 ### 1.0.0
 - **New:** Initial release of the standalone viewer.
 - **New:** Support for Posts, Comments, Messages, Votes, and Saved items.

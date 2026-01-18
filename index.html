@@ -54,21 +54,6 @@
                 <div class="stats" id="stats"></div>
             </div>
 
-            <!-- Date Range Slider -->
-            <div class="date-range-container" id="date-range-container" style="display: none;">
-                <div class="date-range-labels">
-                    <span id="date-range-start">--</span>
-                    <span class="date-range-title">📅 Date Range</span>
-                    <span id="date-range-end">--</span>
-                </div>
-                <div class="date-range-slider">
-                    <input type="range" id="date-min-slider" min="0" max="100" value="0" class="range-slider range-min">
-                    <input type="range" id="date-max-slider" min="0" max="100" value="100"
-                        class="range-slider range-max">
-                    <div class="slider-track"></div>
-                    <div class="slider-range" id="slider-range"></div>
-                </div>
-            </div>
 
             <!-- Posts Tab -->
             <div id="posts-tab" class="tab-content active">
@@ -81,6 +66,22 @@
                     </div>
                 </div>
                 <div id="posts-view" class="hidden">
+                    <!-- Posts Date Range Slider -->
+                    <div class="date-range-container" id="posts-date-range-container" style="display: none;">
+                        <div class="date-range-labels">
+                            <span id="posts-date-range-start">--</span>
+                            <span class="date-range-title">📅 Date Range</span>
+                            <span id="posts-date-range-end">--</span>
+                        </div>
+                        <div class="date-range-slider">
+                            <input type="range" id="posts-date-min-slider" min="0" max="100" value="0"
+                                class="range-slider range-min">
+                            <input type="range" id="posts-date-max-slider" min="0" max="100" value="100"
+                                class="range-slider range-max">
+                            <div class="slider-track"></div>
+                            <div class="slider-range" id="posts-slider-range"></div>
+                        </div>
+                    </div>
                     <div class="table-container">
                         <table id="posts-table">
                             <thead>
@@ -109,6 +110,22 @@
                     </div>
                 </div>
                 <div id="comments-view" class="hidden">
+                    <!-- Comments Date Range Slider -->
+                    <div class="date-range-container" id="comments-date-range-container" style="display: none;">
+                        <div class="date-range-labels">
+                            <span id="comments-date-range-start">--</span>
+                            <span class="date-range-title">📅 Date Range</span>
+                            <span id="comments-date-range-end">--</span>
+                        </div>
+                        <div class="date-range-slider">
+                            <input type="range" id="comments-date-min-slider" min="0" max="100" value="0"
+                                class="range-slider range-min">
+                            <input type="range" id="comments-date-max-slider" min="0" max="100" value="100"
+                                class="range-slider range-max">
+                            <div class="slider-track"></div>
+                            <div class="slider-range" id="comments-slider-range"></div>
+                        </div>
+                    </div>
                     <div class="table-container">
                         <table id="comments-table">
                             <thead>
@@ -136,6 +153,22 @@
                     </div>
                 </div>
                 <div id="messages-view" class="hidden">
+                    <!-- Messages Date Range Slider -->
+                    <div class="date-range-container" id="messages-date-range-container" style="display: none;">
+                        <div class="date-range-labels">
+                            <span id="messages-date-range-start">--</span>
+                            <span class="date-range-title">📅 Date Range</span>
+                            <span id="messages-date-range-end">--</span>
+                        </div>
+                        <div class="date-range-slider">
+                            <input type="range" id="messages-date-min-slider" min="0" max="100" value="0"
+                                class="range-slider range-min">
+                            <input type="range" id="messages-date-max-slider" min="0" max="100" value="100"
+                                class="range-slider range-max">
+                            <div class="slider-track"></div>
+                            <div class="slider-range" id="messages-slider-range"></div>
+                        </div>
+                    </div>
                     <div class="table-container">
                         <table id="messages-table">
                             <thead>
@@ -411,7 +444,7 @@
                     <!-- About -->
                     <div class="settings-card">
                         <h3>ℹ️ About</h3>
-                        <p>Reddit GDPR Export Data Viewer v1.0</p>
+                        <p>Reddit GDPR Export Data Viewer v1.1</p>
                         <p class="settings-help">View and manage your Reddit GDPR export data.</p>
                     </div>
                 </div>
