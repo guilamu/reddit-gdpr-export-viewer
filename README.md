@@ -42,7 +42,7 @@ If you prefer to build the executable yourself:
 1.  Download the latest release and unzip it to a folder (e.g., `MyRedditViewer`).
 2.  **Scan `RedditViewer.exe` with [VirusTotal](https://www.virustotal.com/gui/home/upload).**
 3.  Create a folder named `csv` inside.
-4.  Place your Reddit export CSV files (e.g., `posts.csv`, `comments.csv`) into the `csv` folder.
+4.  Place your Reddit export CSV files (e.g., `posts.csv`, `comments.csv`, `messages_archive.csv`) into the `csv` folder.
 5.  Double-click `RedditViewer.exe`.
 6.  The application will launch automatically in your default browser.
 
